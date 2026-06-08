@@ -25,11 +25,16 @@ def fetch_data_from_sheets():
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
     ]
-    try:
-        # 🔒 從 Streamlit Secrets 保險箱讀取憑證內容
-        secret_info = st.secrets["gcp"]["service_account"]
-        # 將字串轉換成 Python 字典格式
-        info_dict = json.loads(secret_info)
+   try:
+        # 🔒 直接把當初設定的 [gcp_service_account] 塞進去，完全不用經過 json.loads！
+        info_dict = st.secrets["gcp_service_account"]
+        
+        creds = Credentials.from_service_account_info(info_dict, scopes=SCOPES)
+        client = gspread.authorize(creds)
+        spreadsheet = client.open(SPREADSHEET_NAME)
+        worksheet = spreadsheet.get_worksheet(0)
+        data = worksheet.get_all_records()
+        return pd.DataFrame(data)
         
         creds = Credentials.from_service_account_info(info_dict, scopes=SCOPES)
         client = gspread.authorize(creds)
