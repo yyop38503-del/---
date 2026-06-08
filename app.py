@@ -17,7 +17,7 @@ import json
 SPREADSHEET_NAME = "物流查詢系統" # 👈 請確認這是否與你 Google Sheet 的標題名稱一模一樣
 
 # ==========================================
-# 2. 連結 Google 試算表（改用 Secrets 保險箱寫法）
+# 2. 連結 Google 試算表（標準 TOML 讀取寫法）
 # ==========================================
 @st.cache_data(ttl=60)
 def fetch_data_from_sheets():
@@ -25,16 +25,9 @@ def fetch_data_from_sheets():
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
     ]
-   try:
-        # 🔒 直接把當初設定的 [gcp_service_account] 塞進去，完全不用經過 json.loads！
+    try:
+        # 🔒 直接讀取設定好的 Secrets 字典（已修正縮排）
         info_dict = st.secrets["gcp_service_account"]
-        
-        creds = Credentials.from_service_account_info(info_dict, scopes=SCOPES)
-        client = gspread.authorize(creds)
-        spreadsheet = client.open(SPREADSHEET_NAME)
-        worksheet = spreadsheet.get_worksheet(0)
-        data = worksheet.get_all_records()
-        return pd.DataFrame(data)
         
         creds = Credentials.from_service_account_info(info_dict, scopes=SCOPES)
         client = gspread.authorize(creds)
@@ -62,7 +55,8 @@ if df is not None:
         search_result = df[df['買家姓名'].astype(str).str.strip() == buyer_name]
         
         if not search_result.empty:
-            st.success(f"✨ 找到買家 【{buyer_name}】 的物流紀錄：")
+            st.success(f"✨ 找到買家 【{buyer_name}
+】 的物流紀錄：")
             
             for index, row in search_result.iterrows():
                 st.markdown("---")
@@ -81,7 +75,3 @@ if df is not None:
             st.warning(f"🔍 找不到買家 【{buyer_name}】 的資料，請確認名字是否正確。")
 else:
     st.info("💡 正在等待後台資料庫連線...")
-    
-    
-
-
