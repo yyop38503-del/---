@@ -9,15 +9,15 @@ import streamlit as st
 import gspread
 from google.oauth2.service_account import Credentials
 import pandas as pd
+import json
 
 # ==========================================
-# 1. 設定你的設定值（請把這裡改成你的檔名和表單名稱）
+# 1. 設定你的設定值（請把這裡改成你的表單名稱）
 # ==========================================
-KEY_FILE = "key.json" # 👈 請改成你下載的 JSON 金鑰完整檔名
-SPREADSHEET_NAME = "物流查詢系統" # 👈 請改成你 Google Sheet 的標題名稱
+SPREADSHEET_NAME = "物流查詢系統" # 👈 請確認這是否與你 Google Sheet 的標題名稱一模一樣
 
 # ==========================================
-# 2. 連結 Google 試算表
+# 2. 連結 Google 試算表（改用 Secrets 保險箱寫法）
 # ==========================================
 @st.cache_data(ttl=60)
 def fetch_data_from_sheets():
@@ -26,7 +26,12 @@ def fetch_data_from_sheets():
         "https://www.googleapis.com/auth/drive"
     ]
     try:
-        creds = Credentials.from_service_account_file(KEY_FILE, scopes=SCOPES)
+        # 🔒 從 Streamlit Secrets 保險箱讀取憑證內容
+        secret_info = st.secrets["gcp"]["service_account"]
+        # 將字串轉換成 Python 字典格式
+        info_dict = json.loads(secret_info)
+        
+        creds = Credentials.from_service_account_info(info_dict, scopes=SCOPES)
         client = gspread.authorize(creds)
         spreadsheet = client.open(SPREADSHEET_NAME)
         worksheet = spreadsheet.get_worksheet(0)
