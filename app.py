@@ -17,7 +17,7 @@ import json
 SPREADSHEET_NAME = "物流查詢系統" # 👈 請確認這是否與你 Google Sheet 的標題名稱一模一樣
 
 # ==========================================
-# 2. 連結 Google 試算表（標準 TOML 讀取寫法）
+# 2. 連結 Google 試算表（自動適應格式寫法）
 # ==========================================
 @st.cache_data(ttl=60)
 def fetch_data_from_sheets():
@@ -26,9 +26,18 @@ def fetch_data_from_sheets():
         "https://www.googleapis.com/auth/drive"
     ]
     try:
-        # 🔒 直接讀取設定好的 Secrets 字典
-        info_dict = st.secrets["gcp_service_account"]
+        # 🔒 讀取保險箱中的 [gcp] 區塊
+        gcp_secrets = st.secrets["gcp"]
         
+        # 🛠️ 自動相容檢測：如果使用者是用 service_account = '''...''' 封裝的字串
+        if "service_account" in gcp_secrets and isinstance(gcp_secrets["service_account"], str):
+            info_dict = json.loads(gcp_secrets["service_account"])
+        # 🛠️ 如果使用者是直接解開貼上的字典格式
+        elif "type" in gcp_secrets:
+            info_dict = dict(gcp_secrets)
+        else:
+            info_dict = dict(gcp_secrets)
+            
         creds = Credentials.from_service_account_info(info_dict, scopes=SCOPES)
         client = gspread.authorize(creds)
         spreadsheet = client.open(SPREADSHEET_NAME)
