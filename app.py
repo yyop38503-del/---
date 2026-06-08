@@ -26,7 +26,7 @@ def fetch_data_from_sheets():
         "https://www.googleapis.com/auth/drive"
     ]
     try:
-        # 🔒 直接讀取設定好的 Secrets 字典（已修正縮排）
+        # 🔒 直接讀取設定好的 Secrets 字典
         info_dict = st.secrets["gcp_service_account"]
         
         creds = Credentials.from_service_account_info(info_dict, scopes=SCOPES)
@@ -55,8 +55,7 @@ if df is not None:
         search_result = df[df['買家姓名'].astype(str).str.strip() == buyer_name]
         
         if not search_result.empty:
-            st.success(f"✨ 找到買家 【{buyer_name}
-】 的物流紀錄：")
+            st.success(f"✨ 找到買家 【{buyer_name}】 的物流紀錄：")
             
             for index, row in search_result.iterrows():
                 st.markdown("---")
